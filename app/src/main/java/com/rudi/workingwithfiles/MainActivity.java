@@ -16,16 +16,27 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.view.View;
+import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -39,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DownloadManager         downloadManager;
     private long refid;
     ArrayList<Long> list = new ArrayList<>();
+    private String mDownloadedFileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +96,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     downloadAndSaveFile(mValidUrl);
                 }
 
-                Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_show:
                 Toast.makeText(this, "Show", Toast.LENGTH_SHORT).show();
+                if (!TextUtils.isEmpty(mDownloadedFileUri)) {
+                   // try {
+                        //new File(mDownloadedFileUri).toURI().toURL();
+
+                    Bitmap bmp = BitmapFactory.decodeFile(new File(mDownloadedFileUri).toURI().toString());
+                    //Bitmap bmp = BitmapFactory.decodeFile( mDownloadedFileUri);
+//                     InputStream is = new URL( mDownloadedFileUri ).openStream();
+//                        Bitmap bmp = BitmapFactory.decodeStream( is );
+
+                        mImage.setImageBitmap(bmp);
+//                    } catch (MalformedURLException e) {
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+
+
+                    mShowButton.setEnabled(false);
+                }
                 break;
         }
     }
@@ -138,17 +169,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void downloadAndSaveFile(String url) {
         Uri downloadUri = Uri.parse(url);
 
-        String extension = url.substring(url.lastIndexOf('.') + 1);
+        String fileName = URLUtil.guessFileName(url, null, MimeTypeMap.getFileExtensionFromUrl(url));
+
         DownloadManager.Request request = new DownloadManager.Request(downloadUri);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
         request.setAllowedOverRoaming(false);
-        request.setTitle("file." + extension);
+        request.setTitle(fileName);
         request.setDescription("Downloading " + url);
-        request.setVisibleInDownloadsUi(true);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "file." + extension);
+        //request.setVisibleInDownloadsUi(true);
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
         refid = downloadManager.enqueue(request);
         list.add(refid);
+        mDownloadedFileUri = Environment.DIRECTORY_DOWNLOADS + File.separator + fileName;
+        System.out.println(mDownloadedFileUri);
     }
 
     BroadcastReceiver onComplete = new BroadcastReceiver() {
@@ -170,12 +205,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         new NotificationCompat.Builder(MainActivity.this)
                                 .setSmallIcon(R.mipmap.ic_launcher)
                                 .setContentTitle("Working With Files")
-                                .setContentText("All Download completed");
+                                .setContentText("Download completed");
 
 
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 notificationManager.notify(455, mBuilder.build());
 
+                mShowButton.setEnabled(true);
 
             }
 
