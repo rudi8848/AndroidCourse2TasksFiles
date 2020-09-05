@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<Long> list = new ArrayList<>();
     private String mDownloadedFileUri;
 
+// url example: https://www.gmcrafts.co.uk/wp-content/uploads/2018/11/Unicorn-And-Rainbow-Main-Product-Image-500x500.jpg
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,28 +97,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     downloadAndSaveFile(mValidUrl);
                 }
-
-                //Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_show:
                 Toast.makeText(this, "Show", Toast.LENGTH_SHORT).show();
                 if (!TextUtils.isEmpty(mDownloadedFileUri)) {
-                   // try {
-                        //new File(mDownloadedFileUri).toURI().toURL();
-
                     Bitmap bmp = BitmapFactory.decodeFile(new File(mDownloadedFileUri).toURI().toString());
-                    //Bitmap bmp = BitmapFactory.decodeFile( mDownloadedFileUri);
-//                     InputStream is = new URL( mDownloadedFileUri ).openStream();
-//                        Bitmap bmp = BitmapFactory.decodeStream( is );
-
-                        mImage.setImageBitmap(bmp);
-//                    } catch (MalformedURLException e) {
-//                        e.printStackTrace();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-
-
+                    mImage.setImageBitmap(bmp);
                     mShowButton.setEnabled(false);
                 }
                 break;
@@ -176,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         request.setAllowedOverRoaming(false);
         request.setTitle(fileName);
         request.setDescription("Downloading " + url);
-        //request.setVisibleInDownloadsUi(true);
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
@@ -190,17 +175,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         public void onReceive(Context ctxt, Intent intent) {
 
-            // get the refid from the download manager
             long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-
-// remove it from our list
             list.remove(referenceId);
-
-// if list is empty means all downloads completed
             if (list.isEmpty())
             {
-
-// show a notification
                 NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(MainActivity.this)
                                 .setSmallIcon(R.mipmap.ic_launcher)
